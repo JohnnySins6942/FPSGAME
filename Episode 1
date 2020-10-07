@@ -1,0 +1,33 @@
+Gun Script:
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class GunScript : MonoBehaviour
+{
+    //Gameobjects
+    public GameObject Bullet;
+    public GameObject BulletExitPos;
+   
+    //data
+    public float bulletSpeed;
+
+    private void Update()
+    {
+        if(Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            Fire();
+        }
+    }
+    void Fire()
+    {
+        var BULLET = Instantiate(Bullet, BulletExitPos.transform.position, BulletExitPos.transform.rotation);
+
+        var rb = BULLET.GetComponent<Rigidbody>();
+
+        rb.AddForce(-transform.forward * bulletSpeed);
+
+        Destroy(BULLET, 6f);
+    }
+}
