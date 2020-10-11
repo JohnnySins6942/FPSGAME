@@ -1,0 +1,140 @@
+Gun Script:
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class GunScript : MonoBehaviour
+{
+    //Gameobjects
+    public GameObject Bullet;
+    public GameObject BulletExitPos;
+
+    //components
+    public Animator GunAnim;
+   
+    //data
+    public float bulletSpeed;
+    public float fireRate;
+    public float NextTimeToFire = 0f;
+    public float reloadTime;
+
+    public int AmmoAmount;
+    public int MaxAmmoAmount;
+
+    //bools
+    private bool canReload = true;
+    private bool canShoot = true;
+
+    private void Start()
+    {
+        AmmoAmount = MaxAmmoAmount;
+    }
+
+    private void Update()
+    {
+        if(Input.GetKeyDown(KeyCode.Mouse0) && Time.time >= NextTimeToFire && canReload)
+        {
+            StartCoroutine(Fire());
+            NextTimeToFire = Time.time + 1 / fireRate;
+            AmmoAmount--;
+        }
+        if(Input.GetKeyDown(KeyCode.R) || AmmoAmount <= 0)
+        {
+            StartCoroutine(Reload());
+        }
+    }
+    IEnumerator Fire()
+    {
+        if (canShoot)
+        {
+            GunAnim.SetBool("IsShooting", true);
+            canShoot = false;
+            var BULLET = Instantiate(Bullet, BulletExitPos.transform.position, BulletExitPos.transform.rotation);
+            var rb = BULLET.GetComponent<Rigidbody>();
+            rb.AddForce(-transform.forward * bulletSpeed);
+            yield return new WaitForSeconds(1f);
+            canShoot = true;
+            GunAnim.SetBool("IsShooting", false);
+
+            Destroy(BULLET, 6f);
+        }
+    }
+
+    IEnumerator Reload()
+    {
+        if (canReload)
+        {
+            canReload = false;
+            GunAnim.SetBool("IsReloading", true);
+            yield return new WaitForSeconds(reloadTime);
+            AmmoAmount = MaxAmmoAmount;
+            GunAnim.SetBool("IsReloading", false);
+            canReload = true;
+        }
+    }
+}
+
+Bullet Behavior:
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class BulletBehaviour : MonoBehaviour
+{
+    public GameObject BulletCollisionFX;
+    private void OnCollisionEnter(Collision collision)
+    {
+        var TempBullet = Instantiate(BulletCollisionFX, gameObject.transform.position, gameObject.transform.rotation);
+        Destroy(TempBullet, 4);
+        Destroy(gameObject);
+    }
+}
+
+
+Health Script:
+using UnityEngine;
+using UnityEngine.UI;
+
+public class Health : MonoBehaviour
+{
+    public float health;
+    public float maxHealth;
+
+    public Slider slider;
+
+    private void Start()
+    {
+        slider.maxValue = maxHealth;
+        health = maxHealth;
+        ChangeUI();
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            TakeDamage(Random.Range(1, 10));
+        } 
+        if(Input.GetKeyDown(KeyCode.H))
+        {
+            Heal(Random.Range(2, 15));
+        }
+    }
+
+    void ChangeUI()
+    {
+        slider.value = health;
+    }
+
+    public void Heal(float HealAmount)
+    {
+        health += HealAmount;
+        ChangeUI();
+    }
+
+    public void TakeDamage(float damage)
+    {
+        health -= damage;
+        ChangeUI();
+    }
+}
